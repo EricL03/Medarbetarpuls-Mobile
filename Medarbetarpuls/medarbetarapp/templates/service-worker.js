@@ -4,8 +4,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         '/',                         // homepage
         '/static/manifest.json',     // manifest
-        '/static/styles.css',     // manifest
-        '/static/images/logo.png',
+        '/static/styles.css',
         '/static/images/logo.png'
         // add CSS, JS, and other pages if you want offline access
       ]);
