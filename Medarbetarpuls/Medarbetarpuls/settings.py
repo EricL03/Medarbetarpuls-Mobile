@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import mimetypes
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -93,6 +94,9 @@ MIDDLEWARE = [
 
 # Compressed static files...
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Handle manifest file correctly...
+mimetypes.add_type("application/manifest+json", ".json", True)
 
 ROOT_URLCONF = "Medarbetarpuls.urls"
 
