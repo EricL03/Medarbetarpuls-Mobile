@@ -14,9 +14,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.views.generic import TemplateView
 from django.urls import path, include
 
 urlpatterns = [
     path("", include("medarbetarapp.urls")),  # Includes URLs from myapp
-
+    path('service-worker.js', TemplateView.as_view(
+        template_name="service-worker.js",
+        content_type='application/javascript'
+    )),
 ]
