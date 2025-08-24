@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
   <head>
     {% load static %}
@@ -46,6 +46,7 @@
           <div class="value">{{ user.email }}</div>
         </div>
       </div>
+      <button id="enablePush">Tillåt Notifikationer</button>
       <button class="delete-button" onclick="openDelete()">Radera konto</button>
 
       <!-- Delete Confirmation Popup -->
@@ -237,9 +238,12 @@
       let logoutTimer;
       function resetTimer() {
         clearTimeout(logoutTimer);
-        logoutTimer = setTimeout(() => {
-          document.getElementById('logout-form').requestSubmit();
-          }, 10 * 60 * 1000); // 10 minutes
+        logoutTimer = setTimeout(
+          () => {
+            document.getElementById("logout-form").requestSubmit();
+          },
+          10 * 60 * 1000,
+        ); // 10 minutes
       }
 
       window.onload = resetTimer;
@@ -247,9 +251,56 @@
       document.onkeypress = resetTimer;
       document.onscroll = resetTimer;
       document.onclick = resetTimer;
-  
+
+      // Button click → request permission + subscribe
+      document
+        .getElementById("enablePush")
+        .addEventListener("click", async () => {
+          if (!("Notification" in window) || !("PushManager" in window)) {
+            alert("Push notifications not supported on this device/browser.");
+            return;
+          }
+
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            alert("Permission denied for notifications.");
+            return;
+          }
+
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(
+              "BEjcu7FmeBMDcGfTfGtHDcXZWDrfO1M70AB5iq_6kj7AfSLhYywA-CnLyD564uLHkciiIO8F3-gjPKC25OONAWE",
+            ),
+          });
+
+          console.log("Push Subscription:", JSON.stringify(subscription));
+          alert("Subscription created! Check the console.");
+        });
+
+      // Helper to convert VAPID key (replace above)
+      function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding)
+          .replace(/\-/g, "+")
+          .replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
     </script>
-    <form id="logout-form" method="post" hx-post="/logout/" hx-target="body" hx-swap="outerHTML" style="display:none;">
+    <form
+      id="logout-form"
+      method="post"
+      hx-post="/logout/"
+      hx-target="body"
+      hx-swap="outerHTML"
+      style="display: none"
+    >
       {% csrf_token %}
     </form>
   </body>

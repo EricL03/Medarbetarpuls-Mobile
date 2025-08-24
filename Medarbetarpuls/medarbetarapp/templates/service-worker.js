@@ -35,3 +35,23 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// For push notifications
+self.addEventListener("push", (event) => {
+  const data = event.data.json()
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/static/images/logo.png'
+    })
+  );
+});
+
+// For push notifications
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow("/") // Can be adjusted to open a specific page
+  );
+});
