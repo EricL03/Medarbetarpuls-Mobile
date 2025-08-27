@@ -275,8 +275,16 @@
             ),
           });
 
-          console.log("Push Subscription:", JSON.stringify(subscription));
-          alert("Subscription created! Check the console.");
+          // Send subscription to Django
+          await fetch("/save_subscription/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(subscription),
+          });
+
+          alert("Subscription saved!");
         });
 
       // Helper to convert VAPID key (replace above)

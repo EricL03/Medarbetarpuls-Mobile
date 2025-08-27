@@ -20,6 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Vapid private key 
 # 9TKYwgLyRGYawNHluNMICkMxLwHhhCJELGdhTJIGdEw
+VAPID_PUBLIC_KEY = "BEjcu7FmeBMDcGfTfGtHDcXZWDrfO1M70AB5iq_6kj7AfSLhYywA-CnLyD564uLHkciiIO8F3-gjPKC25OONAWE"
+VAPID_PRIVATE_KEY = "9TKYwgLyRGYawNHluNMICkMxLwHhhCJELGdhTJIGdEw"
+VAPID_CLAIMS = {
+    "sub": "mailto:medarbetarpuls@gmail.com"
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/

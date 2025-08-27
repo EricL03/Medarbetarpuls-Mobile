@@ -138,4 +138,6 @@ urlpatterns = [
     path(
         "unanswered-surveys/", views.unanswered_surveys_view, name="unanswered_surveys"
     ),
+    path("save_subscription/", views.save_subscription, name="save_subscription"),
+    path("send_test_push/", views.send_test_push, name="send_test_push"),
 ]

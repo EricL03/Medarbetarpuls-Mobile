@@ -127,6 +127,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):  # pyright: ignore
     survey_groups = models.ManyToManyField(EmployeeGroup, related_name="managers")
     survey_templates = OneToManyManager["SurveyTemplate"]
     published_surveys = OneToManyManager["Survey"]
+    push_subscriptions = OneToManyManager["PushSubscription"]
 
     # Relationships to parent classes
     admin = models.ForeignKey(
@@ -606,3 +607,14 @@ class QuestionOrder(models.Model):
 
     def __str__(self) -> str:
         return f"{self.order}. {self.question}"
+
+
+class PushSubscription(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="push_subscriptions")
+    endpoint = models.TextField()
+    p256dh = models.TextField()
+    auth = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Subscription for {self.user.email} ({self.endpoint[:30]}...)"

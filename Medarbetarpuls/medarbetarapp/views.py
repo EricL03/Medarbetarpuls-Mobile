@@ -1,5 +1,6 @@
 import random
 import logging
+import json
 import platform
 from . import models
 from django.db.models import Q, Max, Count
@@ -8,7 +9,7 @@ from django.urls import reverse
 from xmlrpc.client import Boolean
 from django.core.cache import cache
 from datetime import datetime, time
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import QuestionType, SurveyUserResult, EmployeeGroup, QuestionFormat
 from django.core.mail import send_mail
 from .tasks import schedule_notification, publish_survey_async
@@ -16,12 +17,14 @@ from django.utils.timezone import make_aware
 from .analysis_handler import AnalysisHandler
 from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from .decorators import allowed_roles, logout_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Case, When, IntegerField, Value
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from .standard_questions import STANDARD_QUESTIONS
+from pywebpush import webpush, WebPushException
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -2370,3 +2373,52 @@ def analysis_view(request):
     context["QuestionType"] = QuestionType
 
     return render(request, "analysis.html", context)
+
+@csrf_exempt  
+def save_subscription(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            subscription = models.PushSubscription(
+                user=request.user,  
+                endpoint=data["endpoint"],
+                p256dh=data["keys"]["p256dh"],
+                auth=data["keys"]["auth"],
+            )
+            subscription.save() 
+
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+def send_test_push(request):
+    # Just grab the first subscription for this user (for testing)
+    sub = models.PushSubscription.objects.filter(user=request.user).first()
+    if not sub:
+        return HttpResponse("No subscription found")
+
+    subscription_info = {
+        "endpoint": sub.endpoint,
+        "keys": {
+            "p256dh": sub.p256dh,
+            "auth": sub.auth,
+        },
+    }
+
+    try:
+        webpush(
+            subscription_info,
+            data=json.dumps({
+                "title": "Hello from Django!",
+                "body": "This is your test push message."
+            }),
+            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": "mailto:you@example.com"},
+        )
+    except WebPushException as ex:
+        return HttpResponse(f"Push failed: {ex}", status=500)
+
+    return HttpResponse("Push sent!")
