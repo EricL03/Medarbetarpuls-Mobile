@@ -1589,6 +1589,31 @@ def my_results_view(request):
     Returns:
         HttpResponse: Renders the survey results page.
     """
+    # Just grab the first subscription for this user (for testing)
+    sub = models.PushSubscription.objects.filter(user=request.user).first()
+    if not sub:
+        return HttpResponse("No subscription found")
+
+    subscription_info = {
+        "endpoint": sub.endpoint,
+        "keys": {
+            "p256dh": sub.p256dh,
+            "auth": sub.auth,
+        },
+    }
+
+    try:
+        webpush(
+            subscription_info,
+            data=json.dumps({
+                "title": "Hello from Django!",
+                "body": "This is your test push message."
+            }),
+            vapid_private_key=settings.VAPID_PRIVATE_KEY,
+            vapid_claims={"sub": "mailto:you@example.com"},
+        )
+    except WebPushException as ex:
+        return HttpResponse(f"Push failed: {ex}", status=500)
 
     user = request.user  # Assuming the user is authenticated
     answered_count = user.count_answered_surveys()
